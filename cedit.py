@@ -1,10 +1,64 @@
+"""
+@@@  @@@@@@@    @@@@@@@     @@@  @@@  @@@   @@@@@@   @@@@@@@    @@@@@@
+@@@  @@@@@@@@  @@@@@@@@     @@@  @@@  @@@  @@@@@@@@  @@@@@@@@  @@@@@@@
+@@!  @@!  @@@  !@@          @@!  @@!  @@!  @@!  @@@  @@!  @@@  !@@
+!@!  !@!  @!@  !@!          !@!  !@!  !@!  !@!  @!@  !@!  @!@  !@!
+!!@  @!@!!@!   !@!          @!!  !!@  @!@  @!@!@!@!  @!@!!@!   !!@@!!
+!!!  !!@!@!    !!!          !@!  !!!  !@!  !!!@!!!!  !!@!@!     !!@!!!
+!!:  !!: :!!   :!!          !!:  !!:  !!:  !!:  !!!  !!: :!!        !:!
+:!:  :!:  !:!  :!:          :!:  :!:  :!:  :!:  !:!  :!:  !:!      !:!
+ ::  ::   :::   ::: :::      :::: :: :::   ::   :::  ::   :::  :::: ::
+:     :   : :   :: :: :       :: :  : :     :   : :   :   : :  :: : :
+
+         ##      ##                           ############
+       ##############                     ####################
+     ####  ######  ####     <<=======   ########################
+   ######################             ####  ####  ####  ####  ####
+   ##  ##############  ##  >>>>>)    ##############################
+   ##  ##          ##  ##   <(====     #######    ####    #######
+         ####  ####                      ###                ###
+
+    ------------------------------------------------------------
+     Simple IRCd Configuration Editor (SICE)
+    ------------------------------------------------------------
+     SICE is a lightweight and user-friendly text editor
+     specifically designed for editing .conf files for ircd.
+     It enhances readability and ease of editing by color-coding
+     the separators, making it easier to navigate through
+     configuration files.
+
+     Features:
+     - Customizable separator coloring for improved readability.
+     - Support for basic text editing operations.
+     - Status bar displaying file name and current line position.
+
+     Usage:
+     Run the program in a Linux terminal with the following
+         command:
+
+        python3 editor.py [-s SEPARATOR] filename
+
+     Arguments:
+     - '-s SEPARATOR': Optional. Specifies a custom separator
+       character for coloring. If not provided, '%' is used.
+     - 'filename': The path to the .conf file to be edited.
+
+     Example:
+        python3 editor.py -s ":" myconfig.conf
+
+     Controls:
+     - Arrow keys to navigate.
+     - Page Up/Page Down to scroll.
+     - Ctrl+X to exit (prompts to save changes).
+    ------------------------------------------------------------
+"""
 import curses
 import sys
 import argparse
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Text editor with custom delimiter")
-    parser.add_argument("-d", "--delimiter", default="%", help="Delimiter character")
+    parser = argparse.ArgumentParser(description="Text editor with custom separator")
+    parser.add_argument("-s", "--separator", default="%", help="Separator character")
     parser.add_argument("filename", help="File to edit")
     return parser.parse_args()
 
@@ -15,10 +69,10 @@ def draw_status_bar(stdscr, filename, current_line, total_lines):
     stdscr.addstr(curses.LINES - 1, len(status), " " * (curses.COLS - len(status) - 1))
     stdscr.attroff(curses.color_pair(3))
 
-def main(stdscr, filename, delimiter):
+def main(stdscr, filename, separator):
     curses.use_default_colors()
     curses.init_pair(1, curses.COLOR_CYAN, -1)  # Cyan for comments
-    curses.init_pair(2, curses.COLOR_MAGENTA, -1)  # Pink for delimiter
+    curses.init_pair(2, curses.COLOR_MAGENTA, -1)  # Pink for separator
     curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLUE)  # Status bar
     curses.init_pair(4, curses.COLOR_RED, -1)  # Red for the first char
     curses.init_pair(5, curses.COLOR_WHITE, -1)  # Light gray for normal text
@@ -51,8 +105,8 @@ def main(stdscr, filename, delimiter):
                     stdscr.addstr(i - scroll_offset, 0, line[0], curses.color_pair(4))
                 pos = 1
                 while pos < len(line):
-                    if line[pos] == delimiter:
-                        stdscr.addstr(i - scroll_offset, pos, delimiter, curses.color_pair(2))
+                    if line[pos] == separator:
+                        stdscr.addstr(i - scroll_offset, pos, separator, curses.color_pair(2))
                     else:
                         stdscr.attron(curses.color_pair(5))
                         stdscr.addstr(i - scroll_offset, pos, line[pos])
@@ -117,4 +171,4 @@ def main(stdscr, filename, delimiter):
 
 if __name__ == "__main__":
     args = parse_args()
-    curses.wrapper(main, args.filename, args.delimiter)
+    curses.wrapper(main, args.filename, args.separator)
