@@ -549,7 +549,7 @@
 /*
 ** Notice sent to connecting users if the server is in the split-mode.
 */
-#undef SPLIT_CONNECT_NOTICE "Server is currently in split-mode."
+#undef SPLIT_CONNECT_NOTICE
 
 /*
  * Undefining NO_OPER_REMOTE removes the restriction that O-lines only become
