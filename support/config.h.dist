@@ -436,8 +436,7 @@
  * Note: it may lead to file descriptors exhaustion. ("All connections in use"
  * error message.)
  */
-#undef DELAY_CLOSE     15       /* Recommended value: 15 */
-
+#undef DELAY_CLOSE
 /*
 ** Define this to get oper-only &CLIENTS channel with clients connects,
 ** quits and nick changes.
