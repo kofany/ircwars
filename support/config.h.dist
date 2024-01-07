@@ -441,7 +441,7 @@
 ** Define this to get oper-only &CLIENTS channel with clients connects,
 ** quits and nick changes.
 */
-#undef CLIENTS_CHANNEL
+#define CLIENTS_CHANNEL
 
 /*
 ** Bitmask defining type of information sent to &CLIENTS, combine from
@@ -449,9 +449,9 @@
 ** (also user info), CCL_QUIT (client uid, nick, username, host and IP),
 ** CCL_QUITINFO (also quit reason), CCL_NICK (all nick changes).
 */
-/*
+
 #define CLIENTS_CHANNEL_LEVEL (CCL_CONN|CCL_QUIT|CCL_NICK)
-*/
+
 /*
 ** This adds ability to ban users with specified realnames from
 ** connecting to the server. May be useful for various drones.
