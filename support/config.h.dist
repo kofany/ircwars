@@ -24,13 +24,13 @@
 /* how often (in seconds) should we check that ircd runs? */
 #define IRCDWATCH_POLLING_INTERVAL 30
 
-/* 
+/*
  * should we check for config file changes and HUP the server
  * if a change is detected?
  */
 #undef IRCDWATCH_HUP_ON_CONFIG_CHANGE
 
-/* 
+/*
  * although you may not want to log ircd-messages to syslog you
  * may want to log when ircdwatch reloads the config or when
  * ircd croaks and ircdwatch has to restart it
@@ -77,7 +77,7 @@
 #undef	ENABLE_SUMMON	/* local summon */
 
 /*
- * If you want to have "USERS" output strictly RFC 1459 (showing 
+ * If you want to have "USERS" output strictly RFC 1459 (showing
  * who/finger of your ircd or returning "USERS disabled"), define this.
  * Undefining leads to sending RPL_LOCALUSERS and RPL_GLOBALUSERS.
  * upon "USERS" request.
@@ -88,7 +88,7 @@
 /*
  * If defined, outputs who/finger alike output from ircd box.
  * Note that some boxes no longer have /etc/utmp. When undefined, it will
- * return ERR_USERSDISABLED numeric. 
+ * return ERR_USERSDISABLED numeric.
  * Consider its security implications before defining.
  */
 #undef	USERS_SHOWS_UTMP
@@ -100,12 +100,12 @@
  * mode "i" (i == invisible). Invisibility means people dont showup in
  * WHO or NAMES unless they are on the same channel as you.
  */
-#undef	DEFAULT_INVISIBLE
+#define	DEFAULT_INVISIBLE
 
-/* 
+/*
  * Define this if you want to have KLINE command for opers and services.
  */
-#undef KLINE
+#define KLINE
 
 /*
  * Define this if you want to have TKLINE and UNTKLINE commands
@@ -114,13 +114,12 @@
 #define TKLINE
 
 /* If you want tklines to be limited in time, define this (seconds). */
-/* #define TKLINE_MAXTIME 86400 */
+#define TKLINE_MAXTIME 259200
 
 /* Choose tkill notices to be sent either to &OPER or &NOTICES */
 /* #define SCH_TKILL SCH_OPER */
 #define SCH_TKILL SCH_NOTICE
-
-/* 
+/*
  * Operator rights can be precisely defined in O:line flags. However
  * if you undefine any of the following, it will make given function
  * unaccessible to your operators, disregarding their O:line flags.
@@ -147,7 +146,7 @@
  * 1 server = 1 connection, 1 user = 1 connection.
  * Due to various sanity checks during startup, minimum is 13.
  */
-#define MAXCONNECTIONS	50
+#define MAXCONNECTIONS	500
 
 /* MAXIMUM LINKS
  *
@@ -184,7 +183,7 @@
  * A HUB Server has many servers connect to it at the same as opposed
  * to a leaf which just has 1 server (typically the uplink).
  */
-#undef	HUB
+#define HUB
 
 #ifdef HUB
 /*
@@ -192,7 +191,7 @@
  * to your server at the same time.  This number is not a limit,
  * it is used to allocate memory when ircd is started.
  */
-# define	MAXSERVERS 3
+# define	MAXSERVERS 5
 #else
 # define	MAXSERVERS 1
 #endif
@@ -308,7 +307,7 @@
  * Define this if you want to use crypted passwords for operators in your
  * ircd.conf file. See contrib/mkpasswd/README for more details on this.
  */
-#undef	CRYPT_OPER_PASSWORD
+#define	CRYPT_OPER_PASSWORD
 
 /*
  * If you want to store encrypted passwords in N-lines for server links,
@@ -316,7 +315,7 @@
  * need not be the same for both, as long as hte opposite end has the
  * right password in the opposite line.  See INSTALL doc for more details.
  */
-#undef	CRYPT_LINK_PASSWORD
+#define	CRYPT_LINK_PASSWORD
 
 /*
  * define this if you enable summon and if you want summon to look for the
@@ -410,7 +409,7 @@
  * NOTE: Enabling this feature will significantly increase the CPU usage
  * for servers carrying several hundred clients and getting many connections.
  */
-#define	CLONE_CHECK
+#undef	CLONE_CHECK
 
 /*
 ** Servers with many clients and lots of K:lines are having noticable
@@ -420,13 +419,13 @@
 ** Undefine (or define to bigger than MAXCONNECTIONS) to check all clients
 ** in one sweep.
 */
-#define MAXDELAYEDKILLS 200
+#define MAXDELAYEDKILLS 300
 
 /*
 ** This defines the message that is sent to clients upon connect.
 ** Keep it short.
 */
-#define HELLO_MSG "Please wait while we process your connection."
+#define HELLO_MSG "Take cover, soon you will join the battle."
 
 /*
  * Connections rejected by check_clones() will be delayed for this many seconds
@@ -437,7 +436,7 @@
  * Note: it may lead to file descriptors exhaustion. ("All connections in use"
  * error message.)
  */
-#define DELAY_CLOSE     15       /* Recommended value: 15 */
+#undef DELAY_CLOSE     15       /* Recommended value: 15 */
 
 /*
 ** Define this to get oper-only &CLIENTS channel with clients connects,
@@ -451,13 +450,14 @@
 ** (also user info), CCL_QUIT (client uid, nick, username, host and IP),
 ** CCL_QUITINFO (also quit reason), CCL_NICK (all nick changes).
 */
-/* #define CLIENTS_CHANNEL_LEVEL (CCL_CONN|CCL_QUIT) */
-
+/*
+#define CLIENTS_CHANNEL_LEVEL (CCL_CONN|CCL_QUIT|CCL_NICK)
+*/
 /*
 ** This adds ability to ban users with specified realnames from
 ** connecting to the server. May be useful for various drones.
 */
-#undef XLINE
+#define XLINE
 
 /*
 ** Define the reason users get as a rejection message.
@@ -465,12 +465,12 @@
 ** is not good that users can see the real reason behind X-rejection.
 */
 /* #define XLINE_EXIT_REASON "X-denied user" */
-#define XLINE_EXIT_REASON "Too many host connections (global)"
+#define XLINE_EXIT_REASON "You have been sidelined from the fight. X-denied!"
 
 /*
 ** Define this to whatever you want to see after successful OPER
 */
-#define TXT_YOUREOPER "You are now an IRC Operator"
+#define TXT_YOUREOPER "You are now an ircWars Fleet Admiral"
 
 /*
 ** If you have huge number of K-lines and provide your users with
@@ -478,13 +478,14 @@
 ** do not want to show it at all), define this.
 ** Note that operators will get list of K anyway.
 */
-/* #define TXT_NOSTATSK "Please use http://example.org/klines instead" */
+#define TXT_NOSTATSK "Top Secret, Fleet Admiral Clearance Required"
 
 /*
 ** If you don't want non-oper clients to see tkline list (like when you run
 ** some service which automatically tklines open proxies), define this.
 */
-/* #undef DISABLE_STATSTKLINE */
+/*
+#define DISABLE_STATSTKLINE
 
 /*
 ** If you have problems with two servers autoconnecting to each other
@@ -506,7 +507,7 @@
 /*
  * Max number of channels a user is allowed to join.
  */
-#define MAXCHANNELSPERUSER  21	/* Recommended value: 21 */
+#define MAXCHANNELSPERUSER  52	/* Recommended value: 21 */
 
 /*
  * USE_IAUTH makes ircd use the iauth program for authentication.
@@ -517,8 +518,7 @@
 /* Following notice is sent before and after /LIST output.
  * If you do not want such behaviour, undefine.
  */
-#define LIST_ALIS_NOTE "Usage of /list for listing all channels is " \
-		       "deprecated. Please use \"/squery alis help\" instead."
+#undef LIST_ALIS_NOTE
 
 /* Define this to see when a channel topic was set and who it was set by.
 ** Warning: eats memory (around 5MB)
@@ -543,13 +543,13 @@
  *
  * Defining to 0 disables entering split-mode.
  */
-#define DEFAULT_SPLIT_USERS	65000
-#define DEFAULT_SPLIT_SERVERS	80
+#define DEFAULT_SPLIT_USERS	0
+#define DEFAULT_SPLIT_SERVERS	0
 
 /*
 ** Notice sent to connecting users if the server is in the split-mode.
 */
-#define SPLIT_CONNECT_NOTICE "Server is currently in split-mode."
+#undef SPLIT_CONNECT_NOTICE "Server is currently in split-mode."
 
 /*
  * Undefining NO_OPER_REMOTE removes the restriction that O-lines only become
@@ -697,7 +697,7 @@
  * This triggers alarm when more than 10 clients in 2 seconds from the same host
  * try to connect to ircd.
  */
-# define	CLONE_MAX	10
+# define	CLONE_MAX	5
 # define	CLONE_PERIOD	2
 #endif
 
@@ -782,11 +782,11 @@
 ** Possible values: 0 (SET CACCEPT OFF), 1 (SET CACCEPT ON)
 ** and 2 (SET CACCEPT SPLIT).
 */
-#define CACCEPT_DEFAULT 2
+#define CACCEPT_DEFAULT 1
 
 /* Minimum values admin can set. */
-#define SPLIT_USERS	50000
-#define SPLIT_SERVERS	50
+#define SPLIT_USERS	0
+#define SPLIT_SERVERS 0
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
