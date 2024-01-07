@@ -63,7 +63,7 @@ def parse_args():
     return parser.parse_args()
 
 def draw_status_bar(stdscr, filename, current_line, total_lines):
-    status = f"File: {filename} - Line: {current_line + 1}/{total_lines}"
+    status = f"File: {filename} - Line: {current_line + 1}/{total_lines} - For exit press Ctrl + X"
     stdscr.attron(curses.color_pair(3))
     stdscr.addstr(curses.LINES - 1, 0, status)
     stdscr.addstr(curses.LINES - 1, len(status), " " * (curses.COLS - len(status) - 1))
