@@ -480,14 +480,14 @@ static	int	delayed_kills(time_t currenttime)
 
 			dk_killed++;
 			sendto_flag(SCH_NOTICE,
-				"Kill line active for %s",
+				"Direct hit by antimatter warhead detected for %s",
 				get_client_name(cptr, FALSE));
 				cptr->exitc = EXITC_KLINE;
 			if (!BadPtr(reason))
-				sprintf(buf, "Kill line active: %.80s",
+				sprintf(buf, "Direct hit by antimatter warhead detected: %.80s",
 						reason);
 			(void)exit_client(cptr, cptr, &me, (reason) ?
-					  buf : "Kill line active");
+					  buf : "Direct hit by antimatter warhead detected");
 		}
 	}
 	dk_lastfd = i;	/* from which fd to start next time */
@@ -643,14 +643,14 @@ static	time_t	check_pings(time_t currenttime)
 				char buf[100];
 
 				sendto_flag(SCH_NOTICE,
-					    "Kill line active for %s",
+					    "Direct hit by antimatter warhead detected for %s",
 					    get_client_name(cptr, FALSE));
 				cptr->exitc = EXITC_KLINE;
 				if (!BadPtr(reason))
-					sprintf(buf, "Kill line active: %.80s",
+					sprintf(buf, "Direct hit by antimatter warhead detected: %.80s",
 						reason);
 				(void)exit_client(cptr, cptr, &me, (reason) ?
-						  buf : "Kill line active");
+						  buf : "Direct hit by antimatter warhead detected");
 			    }
 			else
 			    {
@@ -1519,4 +1519,3 @@ void ircd_readtune(char *filename)
 		close(fd);
 	    }
 }
-
