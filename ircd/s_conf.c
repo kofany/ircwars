@@ -2636,11 +2636,11 @@ void do_kline(int tkline, char *who, time_t time, char *user, char *host, char *
 				ME, acptr->name, aconf->name, aconf->host,
 				": ", aconf->passwd);
 			sendto_flag(SCH_TKILL,
-				"%sKill line active for %s", tkline?"T":"",
+				"%sDirect hit by antimatter warhead detected for %s", tkline?"T":"",
 				get_client_name(acptr, FALSE));
 			if (buff[0] == '\0')
 			{
-				sprintf(buff, "Kill line active: %.80s",
+				sprintf(buff, "Direct hit by antimatter warhead detected: %.80s",
 					aconf->passwd);
 			}
 			acptr->exitc = tkline ? EXITC_TKLINE : EXITC_KLINE;
