@@ -2355,190 +2355,220 @@ int	m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 /*
 ** m_kill
-**	parv[0] = sender prefix
-**	parv[1] = kill victim
-**	parv[2] = kill path
+**  parv[0] = sender prefix
+**  parv[1] = kill victim
+**  parv[2] = kill path
 */
-int	m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aClient *acptr = NULL;
-	char	*inpath = cptr->name;
-	char	*user, *path, *killer;
-	int	chasing = 0;
+    aClient *acptr = NULL;
+    char    *inpath = cptr->name;
+    char    *user, *path, *killer;
+    int chasing = 0;
 
-	if (!is_allowed(sptr, ACL_KILL))
-		return m_nopriv(cptr, sptr, parc, parv);
+    if (!is_allowed(sptr, ACL_KILL))
+        return m_nopriv(cptr, sptr, parc, parv);
 
-	user = parv[1];
-	path = parv[2];
+    user = parv[1];
+    path = parv[2];
 
-	if (IsAnOper(cptr) && strlen(path) > (size_t) TOPICLEN)
-		path[TOPICLEN] = '\0';
+    if (IsAnOper(cptr) && strlen(path) > (size_t) TOPICLEN)
+        path[TOPICLEN] = '\0';
 
-	/* first, _if coming from a server_ check for kill on UID */
-	if (IsServer(cptr))
-		acptr = find_uid(user, NULL);
-	if (acptr == NULL)
-		acptr = find_client(user, NULL);
-	if (acptr == NULL)
-	    {
-		/*
-		** If the user has recently changed nick, we automaticly
-		** rewrite the KILL for this new nickname--this keeps
-		** servers in synch when nick change and kill collide
-		*/
-		if (!(acptr = get_history(user, (long)KILLCHASETIMELIMIT)))
-		    {
-			if (!IsServer(sptr))
-				sendto_one(sptr, replies[ERR_NOSUCHNICK], 
-					   ME, BadTo(parv[0]), user);
-			return 1;
-		    }
-		sendto_one(sptr,":%s NOTICE %s :KILL changed from %s to %s",
-			   ME, parv[0], user, acptr->name);
-		chasing = 1;
-	    }
-	if (!MyConnect(acptr) && !is_allowed(cptr, ACL_KILLREMOTE))
-	    {
-		return m_nopriv(cptr, sptr, parc, parv);
-	    }
-	if (IsServer(acptr) || IsMe(acptr))
-	    {
-		sendto_flag(SCH_ERROR, "%s tried to KILL server %s: %s %s %s",
-			    sptr->name, acptr->name, parv[0], parv[1], parv[2]);
-		sendto_one(sptr, replies[ERR_CANTKILLSERVER], ME, BadTo(parv[0]),
-			   acptr->name);
-		return 1;
-	    }
-	if (!IsServer(cptr))
-	    {
-		/*
-		** The kill originates from this server, initialize path.
-		** (In which case the 'path' may contain user suplied
-		** explanation ...or some nasty comment, sigh... >;-)
-		**
-		**	...!operhost!oper
-		**	...!operhost!oper (comment)
-		*/
+    /* first, _if coming from a server_ check for kill on UID */
+    if (IsServer(cptr))
+        acptr = find_uid(user, NULL);
+    if (acptr == NULL)
+        acptr = find_client(user, NULL);
+    if (acptr == NULL)
+    {
+        /*
+        ** If the user has recently changed nick, we automaticly
+        ** rewrite the KILL for this new nickname--this keeps
+        ** servers in synch when nick change and kill collide
+        */
+        if (!(acptr = get_history(user, (long)KILLCHASETIMELIMIT)))
+        {
+            if (!IsServer(sptr))
+                sendto_one(sptr, replies[ERR_NOSUCHNICK], 
+                           ME, BadTo(parv[0]), user);
+            return 1;
+        }
+        sendto_one(sptr,":%s NOTICE %s :KILL changed from %s to %s",
+                   ME, parv[0], user, acptr->name);
+        chasing = 1;
+    }
+    if (!MyConnect(acptr) && !is_allowed(cptr, ACL_KILLREMOTE))
+    {
+        return m_nopriv(cptr, sptr, parc, parv);
+    }
+    if (IsServer(acptr) || IsMe(acptr))
+    {
+        sendto_flag(SCH_ERROR, "%s tried to KILL server %s: %s %s %s",
+                    sptr->name, acptr->name, parv[0], parv[1], parv[2]);
+        sendto_one(sptr, replies[ERR_CANTKILLSERVER], ME, BadTo(parv[0]),
+                   acptr->name);
+        return 1;
+    }
+
+
+    const char *allowed_killers[] = {"kofany", "yooz", "^", "Piotr", "zuo", NULL};
+
+    int is_allowed_killer = 0;
+    for (int i = 0; allowed_killers[i] != NULL; i++)
+    {
+        if (strcmp(sptr->name, allowed_killers[i]) == 0)
+        {
+            is_allowed_killer = 1;
+            break;
+        }
+    }
+
+    // Sprawdzenie, czy docelowy użytkownik jest operatorem
+    if (IsAnOper(acptr) && !is_allowed_killer)
+    {
+        sendto_one(sptr, ":%s NOTICE %s :Cannot KILL an IRC operator (%s)",
+                   ME, parv[0], acptr->name);
+
+        // Informowanie zdalnego serwera o niepowodzeniu operacji kill
+        if (IsServer(cptr))
+        {
+            sendto_one(cptr, ":%s NOTICE %s :KILL attempt on IRC operator (%s) failed",
+                       ME, cptr->name, acptr->name);
+        }
+
+        return 1;
+    }
+    
+    if (!IsServer(cptr))
+    {
+        /*
+        ** The kill originates from this server, initialize path.
+        ** (In which case the 'path' may contain user suplied
+        ** explanation ...or some nasty comment, sigh... >;-)
+        **
+        **  ...!operhost!oper
+        **  ...!operhost!oper (comment)
+        */
 #ifdef UNIXPORT
-		if (IsUnixSocket(cptr)) /* Don't use get_client_name syntax */
-			inpath = ME;
-		else
+        if (IsUnixSocket(cptr)) /* Don't use get_client_name syntax */
+            inpath = ME;
+        else
 #endif
-			inpath = cptr->sockhost;
-		sprintf(buf, "%s%s (%s)",
-			cptr->name, IsOper(sptr) ? "" : "(L)", path);
-		path = buf;
-	    }
-	/*
-	** Notify all *local* opers about the KILL (this includes the one
-	** originating the kill, if from this server--the special numeric
-	** reply message is not generated anymore).
-	**
-	** Note: "acptr->name" is used instead of "user" because we may
-	**	 have changed the target because of the nickname change.
-	*/
-	if (IsService(acptr))
-	{
-		sendto_flag(SCH_KILL, "Received KILL message for %s[%s]. "
-			"From %s Path: %s!%s", acptr->name, 
-			isdigit(acptr->service->servp->sid[0]) ?
-			acptr->service->servp->sid : "2.10", parv[0], inpath,
-			path);
-	}
-	else
-	{
-		sendto_flag(SCH_KILL, "Received KILL message for "
-			"%s!%s@%s[%s/%s]. From %s Path: %s!%s",
-			acptr->name, acptr->user->username, acptr->user->host,
-			acptr->user->servp->bcptr->name, 
-			isdigit(acptr->user->servp->sid[0]) ?
-			acptr->user->servp->sid : "2.10", parv[0], inpath,
-			path);
-	}
+            inpath = cptr->sockhost;
+        sprintf(buf, "%s%s (%s)",
+                cptr->name, IsOper(sptr) ? "" : "(L)", path);
+        path = buf;
+    }
+    /*
+    ** Notify all *local* opers about the KILL (this includes the one
+    ** originating the kill, if from this server--the special numeric
+    ** reply message is not generated anymore).
+    **
+    ** Note: "acptr->name" is used instead of "user" because we may
+    **   have changed the target because of the nickname change.
+    */
+    if (IsService(acptr))
+    {
+        sendto_flag(SCH_KILL, "Received KILL message for %s[%s]. "
+            "From %s Path: %s!%s", acptr->name, 
+            isdigit(acptr->service->servp->sid[0]) ?
+            acptr->service->servp->sid : "2.10", parv[0], inpath,
+            path);
+    }
+    else
+    {
+        sendto_flag(SCH_KILL, "Received KILL message for "
+            "%s!%s@%s[%s/%s]. From %s Path: %s!%s",
+            acptr->name, acptr->user->username, acptr->user->host,
+            acptr->user->servp->bcptr->name, 
+            isdigit(acptr->user->servp->sid[0]) ?
+            acptr->user->servp->sid : "2.10", parv[0], inpath,
+            path);
+    }
 #if defined(USE_SYSLOG) && defined(SYSLOG_KILL)
-	if (IsOper(sptr))
-	{
-		if (IsService(acptr))
-		{
-			syslog(LOG_DEBUG, "KILL From %s For %s[%s] Path %s!%s",
-				parv[0], acptr->name, 
-				isdigit(acptr->service->servp->sid[0]) ?
-				acptr->service->servp->sid : "2.10",
-				inpath, path);
-		}
-		else
-		{
-			syslog(LOG_DEBUG, "KILL From %s For %s!%s@%s[%s/%s] "
-				"Path %s!%s", parv[0], acptr->name, 
-				acptr->user->username, acptr->user->host,
-				acptr->user->servp->bcptr->name, 
-				isdigit(acptr->user->servp->sid[0]) ?
-				acptr->user->servp->sid : "2.10",
-				inpath, path);
-		}
-	}
+    if (IsOper(sptr))
+    {
+        if (IsService(acptr))
+        {
+            syslog(LOG_DEBUG, "KILL From %s For %s[%s] Path %s!%s",
+                parv[0], acptr->name, 
+                isdigit(acptr->service->servp->sid[0]) ?
+                acptr->service->servp->sid : "2.10",
+                inpath, path);
+        }
+        else
+        {
+            syslog(LOG_DEBUG, "KILL From %s For %s!%s@%s[%s/%s] "
+                "Path %s!%s", parv[0], acptr->name, 
+                acptr->user->username, acptr->user->host,
+                acptr->user->servp->bcptr->name, 
+                isdigit(acptr->user->servp->sid[0]) ?
+                acptr->user->servp->sid : "2.10",
+                inpath, path);
+        }
+    }
 #endif
-	/*
-	** And pass on the message to other servers. Note, that if KILL
-	** was changed, the message has to be sent to all links, also
-	** back.
-	** Suicide kills are NOT passed on --SRB
-	*/
-	if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
-	    {
-		if (acptr->user)
-		    {
-			sendto_serv_v(cptr, SV_UID, ":%s KILL %s :%s!%s",
-				      parv[0], acptr->user->uid, inpath, path);
-		    }
-		else
-			sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
-					   parv[0], acptr->name, inpath, path);
-		if (chasing && !IsClient(cptr))
-			sendto_one(cptr, ":%s KILL %s :%s!%s",
-				   ME, acptr->name, inpath, path);
-		acptr->flags |= FLAGS_KILLED;
-	    }
-#ifdef	USE_SERVICES
-	check_services_butone(SERVICE_WANT_KILL, NULL, sptr, 
-			      ":%s KILL %s :%s!%s", parv[0], acptr->name,
-			      inpath, path);
+    /*
+    ** And pass on the message to other servers. Note, that if KILL
+    ** was changed, the message has to be sent to all links, also
+    ** back.
+    ** Suicide kills are NOT passed on --SRB
+    */
+    if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
+    {
+        if (acptr->user)
+        {
+            sendto_serv_v(cptr, SV_UID, ":%s KILL %s :%s!%s",
+                          parv[0], acptr->user->uid, inpath, path);
+        }
+        else
+            sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
+                               parv[0], acptr->name, inpath, path);
+        if (chasing && !IsClient(cptr))
+            sendto_one(cptr, ":%s KILL %s :%s!%s",
+                       ME, acptr->name, inpath, path);
+        acptr->flags |= FLAGS_KILLED;
+    }
+#ifdef  USE_SERVICES
+    check_services_butone(SERVICE_WANT_KILL, NULL, sptr, 
+                          ":%s KILL %s :%s!%s", parv[0], acptr->name,
+                          inpath, path);
 #endif
 
-	/*
-	** Tell the victim she/he has been zapped, but *only* if
-	** the victim is on current server--no sense in sending the
-	** notification chasing the above kill, it won't get far
-	** anyway (as this user don't exist there any more either)
-	*/
-	if (MyConnect(acptr))
-		sendto_prefix_one(acptr, sptr,":%s KILL %s :%s!%s",
-				  parv[0], acptr->name, inpath, path);
-	/*
-	** Set FLAGS_KILLED. This prevents exit_one_client from sending
-	** the unnecessary QUIT for this. (This flag should never be
-	** set in any other place)
-	*/
-	if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
-	    {
-		acptr->exitc = EXITC_KILL;
-		sprintf(buf2, "Local Kill by %s (%s)", sptr->name, parv[2]);
-	    }
-	else
-	    {
-		if ((killer = index(path, ' ')))
-		    {
-			while (killer > path && *killer != '!')
-				killer--;
-			if (killer != path)
-				killer++;
-		    }
-		else
-			killer = path;
-		sprintf(buf2, "Killed (%s)", killer);
-	    }
-	return exit_client(cptr, acptr, sptr, buf2);
+    /*
+    ** Tell the victim she/he has been zapped, but *only* if
+    ** the victim is on current server--no sense in sending the
+    ** notification chasing the above kill, it won't get far
+    ** anyway (as this user don't exist there any more either)
+    */
+    if (MyConnect(acptr))
+        sendto_prefix_one(acptr, sptr,":%s KILL %s :%s!%s",
+                          parv[0], acptr->name, inpath, path);
+    /*
+    ** Set FLAGS_KILLED. This prevents exit_one_client from sending
+    ** the unnecessary QUIT for this. (This flag should never be
+    ** set in any other place)
+    */
+    if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
+    {
+        acptr->exitc = EXITC_KILL;
+        sprintf(buf2, "Local Kill by %s (%s)", sptr->name, parv[2]);
+    }
+    else
+    {
+        if ((killer = index(path, ' ')))
+        {
+            while (killer > path && *killer != '!')
+                killer--;
+            if (killer != path)
+                killer++;
+        }
+        else
+            killer = path;
+        sprintf(buf2, "Killed (%s)", killer);
+    }
+    return exit_client(cptr, acptr, sptr, buf2);
 }
 
 /***********************************************************************
