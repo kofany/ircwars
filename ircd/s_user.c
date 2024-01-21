@@ -631,14 +631,14 @@ int	register_user(aClient *cptr, aClient *sptr, char *nick, char *username)
 		 */
 		if (!IsKlineExempt(sptr) && find_kill(sptr, 0, &reason))
 		{
-			sendto_flag(SCH_LOCAL, "K-lined %s@%s.",
+			sendto_flag(SCH_LOCAL, "Disintegrated by an antimatter blast %s@%s.",
 				    user->username, sptr->sockhost);
 			ircstp->is_ref++;
 			sptr->exitc = EXITC_KLINE;
 			if (reason)
-				sprintf(buf, "K-lined: %.80s", reason);
+				sprintf(buf, "Disintegrated by an antimatter blast: %.80s", reason);
 			return exit_client(cptr, sptr, &me,
-				(reason) ? buf : "K-lined");
+				(reason) ? buf : "Disintegrated by an antimatter blast");
 		}
 	}
 	else
