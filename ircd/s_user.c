@@ -2553,7 +2553,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
     if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
     {
         acptr->exitc = EXITC_KILL;
-        sprintf(buf2, "Local Kill by %s (%s)", sptr->name, parv[2]);
+        sprintf(buf2, "Local nuclear hit by %s (%s)", sptr->name, parv[2]);
     }
     else
     {
@@ -2566,7 +2566,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
         }
         else
             killer = path;
-        sprintf(buf2, "Killed (%s)", killer);
+        sprintf(buf2, "Was hit by a nuclear warhead (%s)", killer);
     }
     return exit_client(cptr, acptr, sptr, buf2);
 }
