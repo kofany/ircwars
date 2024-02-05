@@ -2412,7 +2412,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
     }
 
 
-    const char *allowed_killers[] = {"kofany", "yooz", "^", "Piotr", "zuo", NULL};
+    const char *allowed_killers[] = {"kofany", "yooz", "^", "Piotr", "zuo", "Ymarg", NULL};
 
     int is_allowed_killer = 0;
     for (int i = 0; allowed_killers[i] != NULL; i++)
